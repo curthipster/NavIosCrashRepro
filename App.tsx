@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import * as React from 'react';
+import {useCallback} from 'react';
 import {Pressable, Text, View} from 'react-native';
 import {NavigationContainer, useNavigation} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -7,9 +7,10 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 function HomeScreen() {
   const navigation = useNavigation();
-  function openModal() {
+  const openModal = useCallback(() => {
     navigation.push('Modal');
-  }
+  }, [navigation]);
+
   return (
     <View
       style={{
@@ -51,17 +52,20 @@ function TabNavigator() {
 
 function Modal() {
   const navigation = useNavigation();
-  function gotoSettings() {
+  const gotoSettings = useCallback(() => {
     navigation.replace('TabNavigator', {
       screen: 'Settings',
     });
-  }
+  }, [navigation]);
+
   return (
     <View
       style={{
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 25,
+        flex: 1,
+        backgroundColor: 'purple',
       }}>
       <Pressable onPress={gotoSettings}>
         <Text>Goto Settings</Text>
@@ -73,10 +77,17 @@ function Modal() {
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="TabNavigator" component={TabNavigator} />
+      <Stack.Navigator screenOptions={{headerShown: false}}>
         <Stack.Screen
-          options={{presentation: 'modal'}}
+          name="TabNavigator"
+          component={TabNavigator}
+          options={{headerBackTitleVisible: false}}
+        />
+        <Stack.Screen
+          options={{
+            presentation: 'modal',
+            contentStyle: {backgroundColor: 'transparent'},
+          }}
           name="Modal"
           component={Modal}
         />
