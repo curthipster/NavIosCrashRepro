@@ -10,21 +10,22 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
-  NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 
 type EmbeddedHomeStackParamList = {
   Home: undefined;
-  Stream: {streamId: string};
+  DeepEmbedded: undefined;
 };
 
 type TabNavigatorParamList = {
   EmbeddedHomeStack: NavigatorScreenParams<EmbeddedHomeStackParamList>;
+  AnotherTab: undefined;
 };
 
 type RootStackParamList = {
   TabNavigator: NavigatorScreenParams<TabNavigatorParamList>;
-  Modal: undefined;
+  ModalOne: undefined;
+  ModalTwo: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -35,7 +36,7 @@ function HomeScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const openModal = useCallback(() => {
-    navigation.push('Modal');
+    navigation.push('ModalOne');
   }, [navigation]);
 
   return (
@@ -52,7 +53,7 @@ function HomeScreen() {
   );
 }
 
-function SettingsScreen() {
+function AnotherTabScreen() {
   return (
     <View
       style={{
@@ -60,16 +61,12 @@ function SettingsScreen() {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      <Text>Settings!</Text>
+      <Text>Just another tab</Text>
     </View>
   );
 }
 
-type StreamProps = NativeStackScreenProps<EmbeddedHomeStackParamList, 'Stream'>;
-
-function StreamScreen({route}: StreamProps) {
-  const {streamId} = route.params;
-  console.log('Stream iD: ' + streamId);
+function DeepEmbeddedScreen() {
   return (
     <View
       style={{
@@ -77,7 +74,7 @@ function StreamScreen({route}: StreamProps) {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-      <Text>Stream</Text>
+      <Text>Deep embedded screen</Text>
     </View>
   );
 }
@@ -99,9 +96,9 @@ function EmbeddedHomeStack() {
           component={HomeScreen}
         />
         <HomeStack.Screen
-          name="Stream"
+          name="DeepEmbedded"
           options={{headerShown: true}}
-          component={StreamScreen}
+          component={DeepEmbeddedScreen}
         />
       </HomeStack.Group>
     </HomeStack.Navigator>
@@ -114,27 +111,32 @@ function TabNavigator() {
       screenOptions={{headerShown: false}}
       initialRouteName="EmbeddedHomeStack"
       backBehavior="history">
+      {/* tab bar isn't customized (ruled out by removing custom tab bar in our app) */}
       <Tab.Screen name="EmbeddedHomeStack" component={EmbeddedHomeStack} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="AnotherTab" component={AnotherTabScreen} />
     </Tab.Navigator>
   );
 }
 
-function Modal() {
+function ModalOne() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const gotoSettings = useCallback(() => {
-    navigation.replace('TabNavigator', {
-      screen: 'EmbeddedHomeStack',
-      params: {
-        screen: 'Stream',
-        initial: false,
+  const gotoDeepEmbedded = useCallback(
+    () =>
+      navigation.replace('TabNavigator', {
+        screen: 'EmbeddedHomeStack',
         params: {
-          streamId: 'foo',
+          screen: 'DeepEmbedded',
+          initial: false,
         },
-      },
-    });
-  }, [navigation]);
+      }),
+    [navigation],
+  );
+
+  const gotoModalTwo = useCallback(
+    () => navigation.replace('ModalTwo'),
+    [navigation],
+  );
 
   return (
     <View
@@ -144,9 +146,41 @@ function Modal() {
         paddingVertical: 25,
         flex: 1,
         backgroundColor: 'purple',
+        gap: 20,
       }}>
-      <Pressable onPress={gotoSettings}>
-        <Text>Goto Stream</Text>
+      <Text>Modal</Text>
+      <Pressable onPress={gotoDeepEmbedded}>
+        <Text>Goto DeepEmbedded</Text>
+      </Pressable>
+      <Pressable onPress={gotoModalTwo}>
+        <Text>Goto Modal Two</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function ModalTwo() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const pop = useCallback(
+    () => navigation.pop(),
+
+    [navigation],
+  );
+
+  return (
+    <View
+      style={{
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 25,
+        flex: 1,
+        backgroundColor: 'purple',
+        gap: 20,
+      }}>
+      <Text>Another Modal</Text>
+      <Pressable onPress={pop}>
+        <Text>Close</Text>
       </Pressable>
     </View>
   );
@@ -155,6 +189,7 @@ function Modal() {
 export default function App() {
   return (
     <NavigationContainer>
+      {/* Diff: No linking config, no datadog (ruled out by deleting both in our app)*/}
       <RootStack.Navigator screenOptions={{headerShown: false}}>
         <RootStack.Screen
           name="TabNavigator"
@@ -166,8 +201,16 @@ export default function App() {
             presentation: 'modal',
             contentStyle: {backgroundColor: 'transparent'},
           }}
-          name="Modal"
-          component={Modal}
+          name="ModalOne"
+          component={ModalOne}
+        />
+        <RootStack.Screen
+          options={{
+            presentation: 'modal',
+            contentStyle: {backgroundColor: 'transparent'},
+          }}
+          name="ModalTwo"
+          component={ModalTwo}
         />
       </RootStack.Navigator>
     </NavigationContainer>
